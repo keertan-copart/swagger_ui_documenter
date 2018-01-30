@@ -28,7 +28,7 @@ class Service
 
   
   def extract_path_from_line(line)
-    @path = line.scan(%r{'/.*/?'}).to_s.gsub(/'/,"")
+    @path = line.scan(%r{'/.*/?'}).to_s.gsub!(/[\'\"\]\[]/, '')    
   end
 
 	def extract_name_and_type(line)
@@ -44,21 +44,24 @@ class Service
 	end
 
   def extract_params
-    @tag = @path.scan(%r{/[a-zA-Z_]+})[0].to_s[1..-1]
-
     @paramset = @path.to_s.scan(%r{/:([a-zA-Z_]+)})
     unless @paramset.length==0
       @param_flag = true
     end
   end
 
-  def format_path
-		return unless @param_flag
-
-		@paramset.each do |param|
-			@path = @path.sub(/:#{param[0].to_s}/, "{"+param[0].to_s+"}")
-		end
+  def extract_tag
+    @tag = @path.scan(%r{/[a-zA-Z_]+})[0].to_s[1..-1]
   end
+
+  def format_path
+		if @param_flag
+		  @paramset.each do |param|
+      @path = @path.sub(/:#{param[0].to_s}/, "{"+param[0].to_s+"}")
+      end
+    end
+    @path
+	end
 
 
   def self.baseurl=(url)
@@ -102,10 +105,13 @@ def commented?(line)
      
 end
 
-
+# check if a tag exists in our dictionary, if not it adds it and returns true. if yes, then it returns false.
 def tagger(tag)
   if !Service.all_tags.include? tag
     Service.all_tags.push(tag)
+    true
+  else
+    false
   end
 end
 #**********************************************************
@@ -117,39 +123,60 @@ end
 
 
 # read line by line
-count = 0
-temp_comment = ""
+
 
 if ARGV.empty?
   puts "Error: Specify file location as argument"
 else
-  Service.baseurl = "hello/sample" 
+  Service.baseurl = "hello/sample"
+  service_count = 0
+  temp_comment = ""
+  tag_and_path_based_service_order = {}
+  services_array = Array.new 
 
-  services_array = Array.new
-  
   temp_location = '/Users/kedakarapu/copart/ycs-api-transporter-app/ycs-api/app/handlers/transporter_handler.rb'  #Reading the file line by line
   File.readlines(ARGV[0].to_s).each do |line|
     if commented? line #check if its commented
       temp_comment += line
     elsif hotword? line
-        s = Service.new
-        s.extract_service_from_line line
-        s.extract_path_from_line line
-        s.extract_params
-        s.format_path
-        s.comment = (temp_comment + line[/[#](.)\1/].to_s)
-        tagger s.tag
-        services_array.push(s)
-        s = nil
-        count = count + 1
+      s = Service.new
+      service_count = service_count + 1
+      s.extract_service_from_line line
+      s.extract_path_from_line line
+      s.extract_params
+      temp_tag = s.extract_tag
+      temp_path = s.format_path.to_s
+      s.comment = (temp_comment + line[/[#](.)\1/].to_s)
+        
+      #format into order of json creation.
+
+
+
+      if tagger(s.tag) #returns false if tag already exists
+        tag_and_path_based_service_order[temp_tag] = { temp_path => [service_count-1]}
+      else
+        #check if the path exists. If yes, add (service_count-1) to it, if not create one and add.
+        if tag_and_path_based_service_order.has_key?(temp_tag) && tag_and_path_based_service_order[temp_tag].has_key?(temp_path) 
+          tag_and_path_based_service_order[temp_tag][temp_path] << service_count
+        else
+          tag_and_path_based_service_order[temp_tag][temp_path] = [service_count-1]
+        end
       end
+
+      services_array.push(s)
+      s = nil
+      
+    end
   end
   
-  puts count.to_s + " Routes Discovered"
+  puts service_count.to_s + " Routes Discovered"
 
 end
 
-#Generate json file
+Service.all_tags.sort!
+
+
+# we need to have our services in the order of path and tags. 
 
 Service.all_tags.each do |tag|
   puts tag 
@@ -160,7 +187,8 @@ Service.all_tags.each do |tag|
   end
 end
 
+puts tag_and_path_based_service_order.inspect
 
-
+#Generate json file
 
 
