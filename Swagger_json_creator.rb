@@ -1,7 +1,12 @@
 require 'rubygems'
 require 'json'
+require 'swagger/blocks'
+
+
 
 class Service
+  include Swagger::Blocks
+
   @@hotwords = %w[POST post get GET put PUT DELETE delete ]
   @@baseurl = ""
   @@all_tags = %w[]
@@ -88,14 +93,61 @@ class Service
     @comment = extracted_comment
   end
 
- 
-end
+  swagger_root host: 'petstore.swagger.wordnik.com' do
+    key :swagger, '2.0'
+    info version: '1.0.0' do
+      key :title, 'Swagger Petstore'
+      key :description, 'A sample API that uses a petstore as an example to ' \
+                        'demonstrate features in the swagger-2.0 specification'
+      key :termsOfService, 'http://helloreverb.com/terms/'
+      contact do
+        key :name, 'Wordnik API Team'
+      end
+      license do
+        key :name, 'MIT'
+      end
+    end
+    key :basePath, '/api'
+    key :schemes, ['http']
+    key :consumes, ['application/json']
+    key :produces, ['application/json']
+    security_definition :api_key, type: :apiKey do
+      key :name, :api_key
+      key :in, :header
+    end
+    security_definition :petstore_auth do
+      key :type, :oauth2
+      key :authorizationUrl, 'http://swagger.io/api/oauth/dialog'
+      key :flow, :implicit
+      scopes 'write:pets' => 'modify pets in your account' do
+        key 'read:pets', 'read your pets'
+      end
+    end
+    externalDocs description: 'Find more info here' do
+      key :url, 'https://swagger.io'
+    end
+    tag name: 'pet' do
+      key :description, 'Pets operations'
+      externalDocs description: 'Find more info here' do
+        key :url, 'https://swagger.io'
+      end
+    end
+    parameter :species do
+      key :name, :species
+      key :in, :body
+      key :description, 'Species of this pet'
+      key :type, :string
+    end
+  end
 
+
+end
+# end of class!
 
 #Independent functions
 
 def hotword?(line)
-  !!/(post|POST|get|GET|DELETE|delete|put|PUT)\s(.*)/.match(line)
+  /(post|POST|get|GET|DELETE|delete|put|PUT)\s(.*)/.match(line)
 end
 
 
@@ -178,17 +230,62 @@ Service.all_tags.sort!
 
 # we need to have our services in the order of path and tags. 
 
-Service.all_tags.each do |tag|
-  puts tag 
-  services_array.each do |service_obj|
-      if service_obj.tag == tag
-        print "\t" + service_obj.path, service_obj.name + "\n"
-      end
-  end
-end
+#Service.all_tags.each do |tag|
+#  puts tag 
+#  services_array.each do |service_obj|
+#      if service_obj.tag == tag
+#        print "\t" + service_obj.path, service_obj.name + "\n"
+#      end
+#  end
+#end
 
 puts tag_and_path_based_service_order.inspect
 
+
+
+
 #Generate json file
 
+describe 'Swagger::Blocks v2' do
+  describe 'build_json' do
+    it 'outputs the correct data' do
+      swaggered_classes = [
+        PetControllerV2,
+        PetV2,
+        ErrorModelV2
+      ]
+      actual = Swagger::Blocks.build_root_json(swaggered_classes)
+      actual = JSON.parse(actual.to_json)  # For access consistency.
+      data = JSON.parse(RESOURCE_LISTING_JSON_V2)
+
+      # Multiple expectations for better test diff output.
+      expect(actual['info']).to eq(data['info'])
+      expect(actual['paths']).to be
+      expect(actual['paths']['/pets']).to be
+      expect(actual['paths']['/pets']).to eq(data['paths']['/pets'])
+      expect(actual['paths']['/pets/{id}']).to be
+      expect(actual['paths']['/pets/{id}']['get']).to be
+      expect(actual['paths']['/pets/{id}']['get']).to eq(data['paths']['/pets/{id}']['get'])
+      expect(actual['paths']).to eq(data['paths'])
+      expect(actual['definitions']).to eq(data['definitions'])
+      expect(actual).to eq(data)
+    end
+    it 'is idempotent' do
+      swaggered_classes = [PetControllerV2, PetV2, ErrorModelV2]
+      actual = JSON.parse(Swagger::Blocks.build_root_json(swaggered_classes).to_json)
+      data = JSON.parse(RESOURCE_LISTING_JSON_V2)
+      expect(actual).to eq(data)
+    end
+    it 'errors if no swagger_root is declared' do
+      expect {
+        Swagger::Blocks.build_root_json([])
+      }.to raise_error(Swagger::Blocks::DeclarationError)
+    end
+    it 'errors if mulitple swagger_roots are declared' do
+      expect {
+        Swagger::Blocks.build_root_json([PetControllerV2, PetControllerV2])
+      }.to raise_error(Swagger::Blocks::DeclarationError)
+    end
+  end
+end
 
