@@ -162,20 +162,5 @@ end
 
 
 
-=begin
-  
-  Documentation:
-
-
-  Service
-  Name :: Type
-  post   1
-  get    2
-  put    3
-  delete 4
-
-
-
-=end
 
 
