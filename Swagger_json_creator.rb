@@ -1,12 +1,9 @@
 require 'rubygems'
 require 'json'
-require 'swagger/blocks'
 
 
 
 class Service
-  include Swagger::Blocks
-
   @@hotwords = %w[POST post get GET put PUT DELETE delete ]
   @@baseurl = ""
   @@all_tags = %w[]
@@ -99,15 +96,23 @@ end
 
 #Independent functions
 
-def hotword?(line)
+def hotword? line
   /(post|POST|get|GET|DELETE|delete|put|PUT)\s(.*)/.match(line)
 end
 
 
-def commented?(line)
+def single_commented? line
   temp = line.lstrip
-  temp[0] == '#'? true : false
-     
+  temp[0] == '#' && temp[1] != '#'? true : false
+end
+
+def double_commented? line
+  temp = line.lstrip
+  temp[0] == '#' && temp[1] == '#'? true : false
+end
+
+def format_comment line
+  line.sub(/#/,"")
 end
 
 # check if a tag exists in our dictionary, if not it adds it and returns true. if yes, then it returns false.
@@ -119,6 +124,39 @@ def tagger(tag)
     false
   end
 end
+
+def tag_array_creator tags
+  tag_array = []
+  tags.each { |tag| tag_array << { "name" =>  tag , "description" => ""} }
+  tag_array
+end
+
+def generate_service_internal service_obj
+  temp_hash = {}
+  temp_hash["tags"] = [ service_obj.tag ]
+  temp_hash["summary"] =  "should be added"
+  temp_hash["description"] = service_obj.comment
+  temp_hash["consumes"] = %w[ application/json application/xml]
+  temp_hash["produces"] = %w[ application/json application/xml]
+ 
+  temp_hash
+end
+
+def generate_path_internal services 
+  temp_hash = {}
+  services.each do |service_obj_loc| 
+    service_obj = $services_array[service_obj_loc]
+    temp_hash["#{service_obj.name}"] = generate_service_internal service_obj
+  end
+  temp_hash
+end
+
+def generate_internal tag_and_path_based_service_order
+  paths_internal_json = {}
+  tag_and_path_based_service_order.each{ |_tag, path_array| path_array.each { |path, services_array| paths_internal_json["#{path}"] = generate_path_internal services_array } }
+  paths_internal_json
+end
+
 #**********************************************************
 
 
@@ -137,12 +175,12 @@ else
   service_count = 0
   temp_comment = ""
   tag_and_path_based_service_order = {}
-  services_array = Array.new 
+  $services_array = Array.new
 
   temp_location = '/Users/kedakarapu/copart/ycs-api-transporter-app/ycs-api/app/handlers/transporter_handler.rb'  #Reading the file line by line
   File.readlines(ARGV[0].to_s).each do |line|
-    if commented? line #check if its commented
-      temp_comment += line
+    if single_commented? line #check if its commented
+      temp_comment += format_comment line
     elsif hotword? line
       s = Service.new
       service_count = service_count + 1
@@ -152,23 +190,23 @@ else
       temp_tag = s.extract_tag
       temp_path = s.format_path.to_s
       s.comment = (temp_comment + line[/[#](.)\1/].to_s)
-        
+      temp_comment = ""
       #format into order of json creation.
 
-
+      $services_array.push(s)
+      
 
       if tagger(s.tag) #returns false if tag already exists
-        tag_and_path_based_service_order[temp_tag] = { temp_path => [service_count-1]}
+        tag_and_path_based_service_order[temp_tag] = { temp_path => [ service_count-1 ] }
       else
         #check if the path exists. If yes, add (service_count-1) to it, if not create one and add.
         if tag_and_path_based_service_order.has_key?(temp_tag) && tag_and_path_based_service_order[temp_tag].has_key?(temp_path) 
-          tag_and_path_based_service_order[temp_tag][temp_path] << service_count
+          tag_and_path_based_service_order[temp_tag][temp_path] << (service_count - 1)
         else
-          tag_and_path_based_service_order[temp_tag][temp_path] = [service_count-1]
+          tag_and_path_based_service_order[temp_tag][temp_path] = [ service_count-1 ]
         end
       end
 
-      services_array.push(s)
       s = nil
       
     end
@@ -192,53 +230,36 @@ Service.all_tags.sort!
 #  end
 #end
 
-puts tag_and_path_based_service_order.inspect
+#puts tag_and_path_based_service_order.inspect
+
+def create_json tag_and_path_based_service_order
+  js = 
+    { 
+      "swagger": "2.0",
+      "info": {
+              "description": "",
+              "version": "1.0.0",
+              "title": "Swagger Petstore",
+              "termsOfService": "http://swagger.io/terms/",
+              "license": {
+                  "name": "Apache 2.0",
+                  "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+                  }
+              }
+    }
+
+  js["host"] = ""
+  js["basePath"] = ""
+  js["tags"] = tag_array_creator Service.all_tags
+  js["schemes"] = %w[ http ]
+  js["paths"] = generate_internal(tag_and_path_based_service_order)
+  js.to_json
+end
 
 
+puts create_json tag_and_path_based_service_order
 
 
 #Generate json file
 
-describe 'Swagger::Blocks v2' do
-  describe 'build_json' do
-    it 'outputs the correct data' do
-      swaggered_classes = [
-        PetControllerV2,
-        PetV2,
-        ErrorModelV2
-      ]
-      actual = Swagger::Blocks.build_root_json(swaggered_classes)
-      actual = JSON.parse(actual.to_json)  # For access consistency.
-      data = JSON.parse(RESOURCE_LISTING_JSON_V2)
-
-      # Multiple expectations for better test diff output.
-      expect(actual['info']).to eq(data['info'])
-      expect(actual['paths']).to be
-      expect(actual['paths']['/pets']).to be
-      expect(actual['paths']['/pets']).to eq(data['paths']['/pets'])
-      expect(actual['paths']['/pets/{id}']).to be
-      expect(actual['paths']['/pets/{id}']['get']).to be
-      expect(actual['paths']['/pets/{id}']['get']).to eq(data['paths']['/pets/{id}']['get'])
-      expect(actual['paths']).to eq(data['paths'])
-      expect(actual['definitions']).to eq(data['definitions'])
-      expect(actual).to eq(data)
-    end
-    it 'is idempotent' do
-      swaggered_classes = [PetControllerV2, PetV2, ErrorModelV2]
-      actual = JSON.parse(Swagger::Blocks.build_root_json(swaggered_classes).to_json)
-      data = JSON.parse(RESOURCE_LISTING_JSON_V2)
-      expect(actual).to eq(data)
-    end
-    it 'errors if no swagger_root is declared' do
-      expect {
-        Swagger::Blocks.build_root_json([])
-      }.to raise_error(Swagger::Blocks::DeclarationError)
-    end
-    it 'errors if mulitple swagger_roots are declared' do
-      expect {
-        Swagger::Blocks.build_root_json([PetControllerV2, PetControllerV2])
-      }.to raise_error(Swagger::Blocks::DeclarationError)
-    end
-  end
-end
 
