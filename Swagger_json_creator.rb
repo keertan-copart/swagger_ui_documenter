@@ -93,54 +93,7 @@ class Service
     @comment = extracted_comment
   end
 
-  swagger_root host: 'petstore.swagger.wordnik.com' do
-    key :swagger, '2.0'
-    info version: '1.0.0' do
-      key :title, 'Swagger Petstore'
-      key :description, 'A sample API that uses a petstore as an example to ' \
-                        'demonstrate features in the swagger-2.0 specification'
-      key :termsOfService, 'http://helloreverb.com/terms/'
-      contact do
-        key :name, 'Wordnik API Team'
-      end
-      license do
-        key :name, 'MIT'
-      end
-    end
-    key :basePath, '/api'
-    key :schemes, ['http']
-    key :consumes, ['application/json']
-    key :produces, ['application/json']
-    security_definition :api_key, type: :apiKey do
-      key :name, :api_key
-      key :in, :header
-    end
-    security_definition :petstore_auth do
-      key :type, :oauth2
-      key :authorizationUrl, 'http://swagger.io/api/oauth/dialog'
-      key :flow, :implicit
-      scopes 'write:pets' => 'modify pets in your account' do
-        key 'read:pets', 'read your pets'
-      end
-    end
-    externalDocs description: 'Find more info here' do
-      key :url, 'https://swagger.io'
-    end
-    tag name: 'pet' do
-      key :description, 'Pets operations'
-      externalDocs description: 'Find more info here' do
-        key :url, 'https://swagger.io'
-      end
-    end
-    parameter :species do
-      key :name, :species
-      key :in, :body
-      key :description, 'Species of this pet'
-      key :type, :string
-    end
-  end
-
-
+  
 end
 # end of class!
 
