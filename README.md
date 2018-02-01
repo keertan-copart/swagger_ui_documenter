@@ -14,10 +14,11 @@ Using swagger_ui to feed a custom json
 
 Example format: 
 
+"
 
  #body parameters - the next line should follow with parameters in given format
  # name : Array, lot : string
- post '/lots/accept' do # used accept lot information (Summary)  
+ post '/lots/accept' do # used for accept lot information (Summary)  
     return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) ## double hashes for internal comments
     params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) }
     { status: 'success' }.to_json
@@ -30,3 +31,6 @@ Example format:
     params[:lots].each { |number| Ycs::Transporter::UpdateLot.rejected(number) }
     { status: 'success' }.to_json
   end
+
+
+  "
