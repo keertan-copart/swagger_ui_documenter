@@ -8,7 +8,7 @@ class Service
   @@all_tags = %w[]
 
   attr_reader :name, :tag, :comment, :summary, :paramset, :path, :name, :type, :param_flag
-  attr_accessor :deprecated
+  attr_accessor :deprecated, :body_params
 
   def intialize(default_name="post", type = 0, path = "/", deprecated = false, param_flag = false, paramset = %w[], default_comment = "", default_summary = "Not provided")
     @name = default_name
@@ -21,7 +21,7 @@ class Service
     @comment = default_comment
     @summary = default_summary
     @testing_lotno = 12345
-
+    @body_params = {}
     @@baseurl = "0.0.0.0:9292/transporter/"
 
   end
@@ -76,6 +76,9 @@ class Service
     @path
 	end
 
+  def attach_body_params params
+    @body_params = params
+  end
 
   def self.baseurl=(url)
     @@baseurl = url
@@ -162,6 +165,29 @@ def tag_array_creator tags
   tag_array
 end
 
+def generate_parameter s
+  temp_array = []
+  s.paramset&.each do |inline_param|
+    temp_hash = {}  
+    temp_hash["name"] = inline_param
+    temp_hash["in"] = "path"
+    temp_hash["required"] = true
+    temp_hash["type"] = "String"
+    temp_array << temp_hash
+  end
+
+  s.body_params&.each do |body_param|
+    temp_hash = {}
+    temp_hash["name"] = body_param["name"]
+    temp_hash["in"] = "body"
+    temp_hash["required"] = false
+    temp_hash["type"] = body_param["type"]
+    temp_array << temp_hash
+  end
+
+  temp_array
+end
+
 def generate_service_internal service_obj
   temp_hash = {}
   temp_hash["tags"] = [ service_obj.tag ]
@@ -169,6 +195,7 @@ def generate_service_internal service_obj
   temp_hash["description"] = service_obj.comment
   temp_hash["consumes"] = %w[ application/json application/xml]
   temp_hash["produces"] = %w[ application/json application/xml]
+  temp_hash["parameters"] = generate_parameter service_obj
   temp_hash["deprecated"] = service_obj.deprecated ? true : false
   temp_hash
 end
@@ -190,7 +217,27 @@ def generate_internal tag_and_path_based_service_order
   paths_internal_json
 end
 
-def create_json(title, host = "127.0.0.1", basepath = "/", tag_and_path_based_service_order)
+def generate_security_definitions
+  # still to code
+end
+
+def body_params? line
+  line.include?("body_parameters") || line.include?("body parameters") || line.include?("body params") || line.include?("bodyparameters")
+end
+
+def extract_body_params line
+  body_params = []
+  line = line.to_s.sub('#','').strip
+  line.split(',').each do |paramset|
+    temp_hash = {}
+    temp_hash["name"] = paramset.split(':')[0].strip
+    temp_hash["type"] = paramset.split(':')[1].strip
+    body_params << temp_hash
+  end
+  body_params
+end
+
+def create_json(title, host = "127.0.0.1", baseurl = "/", tag_and_path_based_service_order)
   js = 
     { 
       "swagger": "2.0",
@@ -207,10 +254,14 @@ def create_json(title, host = "127.0.0.1", basepath = "/", tag_and_path_based_se
     }
 
   js["host"] = host
-  js["basePath"] = basepath
+  js["basePath"] = baseurl
   js["tags"] = tag_array_creator Service.all_tags
   js["schemes"] = %w[ http ]
   js["paths"] = generate_internal(tag_and_path_based_service_order)
+  js["securityDefinitions"] = generate_security_definitions 
+
+  #include a method to do curl calls and get models to add.
+
   js.to_json
 end
 
@@ -222,6 +273,8 @@ else
   Service.baseurl = "hello/sample"
   service_count = 0
   comment_accumulator = ""
+  current_body_params = {}
+  body_params_flag = false
   tag_and_path_based_service_order = {}
   $services_array = Array.new # Declare a global array for handling services objects created
 
@@ -233,10 +286,19 @@ else
 
   File.readlines(ARGV[0].to_s).each do |line|
     if single_commented? line #check if its commented
-      comment_accumulator += format_comment line
+      if !body_params_flag && body_params?(line)
+        body_params_flag = true
+        puts "params detected"
+      elsif body_params_flag
+        current_body_params = extract_body_params line
+        body_params_flag = false 
+      else
+        comment_accumulator += format_comment(line)
+      end
     elsif hotword? line
       s = Service.new
       service_count = service_count + 1
+      s.attach_body_params current_body_params
       s.extraction line      
       s.comment = comment_accumulator
       s.summary = format_summary line
@@ -257,6 +319,7 @@ else
         end
       end
       s = nil
+      current_body_params = nil
     elsif double_commented? line
       $services_array[service_count-1].comment += format_internal_comment line
     end
@@ -266,7 +329,7 @@ end
 puts service_count.to_s + " Routes Discovered"
 
 #Generate json file
-puts create_json(title, tag_and_path_based_service_order)
+puts create_json(title, '0.0.0.0', Service.baseurl, tag_and_path_based_service_order)
 
 
 
