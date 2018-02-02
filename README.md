@@ -81,7 +81,7 @@ path : ycs-api/app/handlers/FooHandler.rb
 
 The corresponding files for given service ```post '/lots/accept'``` will be stored in 
 
-path : ycs-api/app/spec/FooHandler/sample_name/ 
+path : ycs-api/spec/foo/sample_name/ 
 
 In this folder, we need to have 
 
