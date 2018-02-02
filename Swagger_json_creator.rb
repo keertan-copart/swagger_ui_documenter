@@ -243,22 +243,18 @@ def extract_body_params line
 end
 
 def basic_datatypes? data_type
-  if data_type == "integer" || data_type == "string"
+  if data_type == "integer" || data_type == "string" || data_type == "Integer" || data_type == "String"
     return true
   else
-    puts false
     return false
   end
 end
 
 def existing_type?(data_types_in_this_line, data_type)
-  # implement checking it
-  puts "is this coming : ", data_types_in_this_line
   data_types_in_this_line.has_key?(data_type)
 end
 
 def get_schema_reference data_type
-  # implement fetching schemas here
   "#/definitions/" + data_type
 end
 
@@ -273,24 +269,32 @@ def generate_schema_internal(body_parameters_internal_array, schema_name)
     if body_param["required"]
       required_array << body_param["name"]
     end
+    
+    case
+    when body_param["type"] == "array" && basic_datatypes?(body_param["items"]["type"])
+      temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => body_param["items"]["type"].downcase} }
 
-    if body_param["type"] == "array" # contains array, then
-      case
-      when basic_datatypes?(body_param["items"]["type"])
-        temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => body_param["items"]["type"]} }
-      when existing_type?(temp_hash, body_param["items"]["type"]) # checks if this type is defined in previous params.
-        data_type = temp_hash[body_param["items"]["type"]]["type"]
+    when body_param["type"] == "array" && existing_type?(temp_hash, body_param["items"]["type"]) # checks if this type is defined in previous params.
+      #problem exists!
+      data_type = temp_hash[body_param["items"]["type"]]["type"]
+      if data_type != "array"
         temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => data_type} }
-      else # create new schema
-        temp_hash[body_param["name"]] = { "$ref" => generate_schema_internal( [{ "name" => body_param["name"], "items" => body_param["items"]  }], body_param["name"] ) }
+      else
+        temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => data_type} }
       end
-    else
-      temp_hash[body_param["name"]] = 
-                                  { 
-                                    "type" => body_param["type"]
-                                  }
+
+    when body_param["type"] == "array" && !existing_type?(temp_hash, body_param["items"]["type"])
+      # create new schema, or find an existing schema of this name, and reffer it.
+      temp_hash[body_param["name"]] = { "type" => "array", "items" => {"$ref" => generate_schema_internal( [{ "name" => body_param["type"], "type" =>"unknown", "items" => body_param["items"] }], body_param["items"]["type"] ) }}
+    
+    when body_param["type"] != "array" && basic_datatypes?(body_param["type"])
+      temp_hash[body_param["name"]] = { "type" => body_param["type"]}
+    
+    when body_param["type"] != "array" && !basic_datatypes?(body_param["type"])
+      temp_hash[body_param["name"]] = { "$ref" => generate_schema_internal( [{ "name" => body_param["type"], "type" =>"unknown" }], body_param["type"] ) }
     end
   end
+
   required_array&.empty? ? false : schema["required"] = required_array 
   schema["properties"] = temp_hash
   final_schema = {}
