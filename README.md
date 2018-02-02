@@ -57,15 +57,14 @@ path : ycs-api/app/handlers/FooHandler.rb
 
 ```
 	class Ycs::FooHandler < Boo
-	# name = 
-	# description =
+	# name : The Foo Module
+	# description : used to do this and that task
 
-  	# name :  sample_name
-  	# description : sample_description
+  	# service_name :  sample_name
+  	# service_description : sample_description
   	#
   	#<multiple line description supported> 
   	#
-
 	< single line/ multiple line gap >
 	post '/lots/accept' do 
 	  return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
@@ -103,11 +102,14 @@ Inside payload.rb:
 Inside response.rb:
 
 There should be a model of response 
+```
 	{
 		code : int
-
+		status : string
+		... 
 	}
-
+	
+```
 
 
 
