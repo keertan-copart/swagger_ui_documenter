@@ -8,6 +8,7 @@ class Service
   @@baseurl = ""
   @@host = ""
   @@schema_global = []
+  @@schema_references = {}
 
   attr_reader :name, :tag, :comment, :summary, :paramset, :path, :name, :type, :param_flag, :response_codes
   attr_accessor :deprecated, :body_params, :id
@@ -24,7 +25,7 @@ class Service
     @summary = default_summary
     @testing_lotno = 12345
     @body_params = {}
-    @response_codes = {}
+    @response_codes = [ {"200"=>{"description"=>"success!"}} ]
     @@host = "0.0.0.0:9292"
     @@baseurl = "0.0.0.0:9292/transporter/"
     id = "0"
@@ -241,36 +242,24 @@ def extract_body_params line
   body_params
 end
 
-def generate_array_schema_internal(array_parameter, schema_name)
-  path = "#/definitions/"
-  schema = {}
-  schema["type"] = "array"
-  schema["items"] = { "type" => array_parameter[0]["items"]["type"] }
-
-  ####### Should work this out!!
-  final_schema = {}
-  final_schema[schema_name] = schema
-  if Service.check_duplicate_schema final_schema
-    return Service.check_duplicate_schema final_schema
-  else
-    Service.add_to_global_schema final_schema
-  end
-
-  puts "output is: " , final_schema
-  path + schema_name
-end
-
 def basic_datatypes? data_type
-  data_type.casecmp("integer") || data_type.casecmp("string")
+  if data_type == "integer" || data_type == "string"
+    return true
+  else
+    puts false
+    return false
+  end
 end
 
-def existing_type? data_type
+def existing_type?(data_types_in_this_line, data_type)
   # implement checking it
-
+  puts "is this coming : ", data_types_in_this_line
+  data_types_in_this_line.has_key?(data_type)
 end
 
 def get_schema_reference data_type
   # implement fetching schemas here
+  "#/definitions/" + data_type
 end
 
 def generate_schema_internal(body_parameters_internal_array, schema_name)
@@ -286,15 +275,15 @@ def generate_schema_internal(body_parameters_internal_array, schema_name)
     end
 
     if body_param["type"] == "array" # contains array, then
-      # temp_hash[body_param["name"]] = { "$ref" => generate_array_schema_internal( [{ "name" => body_param["name"], "items" => body_param["items"]  }], body_param["name"] ) }
-      if basic_datatypes? body_param["items"]["type"]
+      case
+      when basic_datatypes?(body_param["items"]["type"])
         temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => body_param["items"]["type"]} }
-      elsif existing_type? body_param["items"]["type"]
-        temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => get_schema_reference(body_param["items"]["type"]) } }
-      else
-        # create new schema
-        #temp_hash[body_param["name"]] = { "$ref" => generate_array_schema_internal( [{ "name" => body_param["name"], "items" => body_param["items"]  }], body_param["name"] ) }
-      end  
+      when existing_type?(temp_hash, body_param["items"]["type"]) # checks if this type is defined in previous params.
+        data_type = temp_hash[body_param["items"]["type"]]["type"]
+        temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => data_type} }
+      else # create new schema
+        temp_hash[body_param["name"]] = { "$ref" => generate_schema_internal( [{ "name" => body_param["name"], "items" => body_param["items"]  }], body_param["name"] ) }
+      end
     else
       temp_hash[body_param["name"]] = 
                                   { 
@@ -302,8 +291,6 @@ def generate_schema_internal(body_parameters_internal_array, schema_name)
                                   }
     end
   end
-
-  puts required_array.inspect
   required_array&.empty? ? false : schema["required"] = required_array 
   schema["properties"] = temp_hash
   final_schema = {}
@@ -313,6 +300,8 @@ def generate_schema_internal(body_parameters_internal_array, schema_name)
   else
     Service.add_to_global_schema final_schema
   end
+  #Service.schema_references[schema_name] = (path+schema_name)
+  # remove schema_references, if appending #/definitons work
   path + schema_name
 end
 
@@ -359,25 +348,27 @@ end
 
 def generate_response_internal service_obj
   temp_hash = {}
+  if service_obj.response_codes&.empty? || !service_obj.response_codes
+    service_obj.attach_response_codes [{"200"=>{"description"=>"success!"}}]
+  end
   service_obj.response_codes&.each do |code|  
     temp_hash = temp_hash.merge(code)
   end
   temp_hash
 end
 
-def generate_service_internal service_obj # TODO
+def generate_service_internal service_obj
   {
-    "tags" => [service_obj.tag],
-    "description" => service_obj.comment
+    "tags" => [service_obj.tag],    
+    "tags" => [ service_obj.tag ],
+    "summary" => service_obj.summary,
+    "description" => service_obj.comment,
+    "consumes" => %w[ application/json application/xml],
+    "produces" => %w[ application/json application/xml],
+    "parameters" => generate_parameter_internal(service_obj),
+    "responses" => generate_response_internal(service_obj),
+    "deprecated" => service_obj.deprecated ? true : false
   }
-  temp_hash["tags"] = [ service_obj.tag ]
-  temp_hash["summary"] =  service_obj.summary
-  temp_hash["description"] = 
-  temp_hash["consumes"] = %w[ application/json application/xml]
-  temp_hash["produces"] = %w[ application/json application/xml]
-  temp_hash["parameters"] = generate_parameter_internal service_obj
-  temp_hash["responses"] = generate_response_internal service_obj
-  temp_hash["deprecated"] = service_obj.deprecated ? true : false
 end
 
 def generate_path_internal services 
@@ -420,7 +411,6 @@ def generate_definitions
   Service.schema_global.each do |schema|
     temp_hash = temp_hash.merge(schema)
   end
-  puts "definitions: " ,temp_hash
   temp_hash
 end
 
