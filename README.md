@@ -1,6 +1,7 @@
 #swagger_ui_documenter
 Using swagger_ui to feed a custom json
 
+Example format: [OLD Version]
 
 ```
 
@@ -13,8 +14,6 @@ Using swagger_ui to feed a custom json
 
 ```
 
-
-Example format: [OLD Version]
 
 ```
  	#host = '0.0.0.0:9292'
@@ -108,7 +107,7 @@ There should be a model of response
 		status : string
 		... 
 	}
-	
+
 ```
 
 
