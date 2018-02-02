@@ -1,4 +1,4 @@
-# swagger_ui_documenter
+#swagger_ui_documenter#
 Using swagger_ui to feed a custom json
 
 
@@ -14,7 +14,7 @@ Using swagger_ui to feed a custom json
 ```
 
 
-Example format: 
+Example format: [OLD Version]
 
 ```
  	#host = '0.0.0.0:9292'
@@ -43,5 +43,41 @@ Example format:
 	 params[:lots].each { |number| Ycs::Transporter::UpdateLot.rejected(number) }
 	 { status: 'success' }.to_json
 	end
+
+
+
+
+```
+
+Example format: [New Version]
+
+```
+	class Ycs::FooHandler < Boo
+	# name = 
+	# description =
+
+  	# name :  
+  	# description :
+  	#
+  	... 
+  	#
+	- single line/ multiple line gap -  
+	post '/lots/accept' do # used for accept lot information 
+	  return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
+	  params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
+	  { status: 'success' }.to_json
+	end
+	- single line/ multiple line gap -  
+	#-
+	#200 :  success!
+	#405 :  error
+	#
+	#.... further codes..
+	#
+	#-
+
+	
+
+
 
 ```
