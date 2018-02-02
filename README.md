@@ -1,4 +1,4 @@
-#swagger_ui_documenter#
+#swagger_ui_documenter
 Using swagger_ui to feed a custom json
 
 
@@ -51,33 +51,70 @@ Example format: [OLD Version]
 
 Example format: [New Version]
 
+This file would be an extract from inside a ycs-api project.
+
+path : ycs-api/app/handlers/FooHandler.rb 
+
 ```
 	class Ycs::FooHandler < Boo
 	# name = 
 	# description =
 
-  	# name :  
-  	# description :
+  	# name :  sample_name
+  	# description : sample_description
   	#
-  	... 
+  	#<multiple line description supported> 
   	#
-	- single line/ multiple line gap -  
-	post '/lots/accept' do # used for accept lot information 
+
+	< single line/ multiple line gap >
+	post '/lots/accept' do 
 	  return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
 	  params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
 	  { status: 'success' }.to_json
 	end
-	- single line/ multiple line gap -  
+	< single line/ multiple line gap >
 	#-
-	#200 :  success!
-	#405 :  error
-	#
-	#.... further codes..
-	#
+	# 200 :  success!
+	# 405 :  error
+	# <further codes>
 	#-
-
-	
-
-
 
 ```
+
+The corresponding files for given service ```post '/lots/accept'``` will be stored in 
+
+path : ycs-api/app/spec/FooHandler/sample_name/ 
+
+In this folder, we need to have 
+
+ - query.rb
+ - payload.rb  (type = get, does not need to have this.) 
+ - response.rb
+
+Inside query.rb:
+
+	Initial thought are to have a hash
+	like: name : string
+		  lot : integer
+
+
+Inside payload.rb:
+
+Inside response.rb:
+
+There should be a model of response 
+	{
+		code : int
+
+	}
+
+
+
+
+
+
+
+
+
+
+
