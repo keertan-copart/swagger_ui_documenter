@@ -86,7 +86,7 @@ path : ycs-api/spec/foo/sample_name/
 In this folder, we need to have 
 
  - query.rb
- - payload.rb  (type = get, does not need to have this.) 
+ - payload.rb  (type = get/delete, does not need to have this.) 
  - response.rb
 
 Inside query.rb:
