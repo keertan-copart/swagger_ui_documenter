@@ -163,9 +163,9 @@ def extract_title url
 end
 
 def extract_response_code line
-  temp_hash = {}  
-  temp_hash[line.sub("#","").split(":")[0]&.strip] = { "description" => line.sub("#","").split(":")[1]&.strip }
-  temp_hash
+  {
+    line.sub("#","").split(":")[0]&.strip => { "description" => line.sub("#","").split(":")[1]&.strip }
+  }
 end
 
 def hotword? line
@@ -265,11 +265,12 @@ def basic_datatypes? data_type
 end
 
 def existing_type? data_type
-  #implement checking it
+  # implement checking it
+
 end
 
 def get_schema_reference data_type
-  #implement fetching schemas here
+  # implement fetching schemas here
 end
 
 def generate_schema_internal(body_parameters_internal_array, schema_name)
@@ -285,10 +286,10 @@ def generate_schema_internal(body_parameters_internal_array, schema_name)
     end
 
     if body_param["type"] == "array" # contains array, then
-      #temp_hash[body_param["name"]] = { "$ref" => generate_array_schema_internal( [{ "name" => body_param["name"], "items" => body_param["items"]  }], body_param["name"] ) }
+      # temp_hash[body_param["name"]] = { "$ref" => generate_array_schema_internal( [{ "name" => body_param["name"], "items" => body_param["items"]  }], body_param["name"] ) }
       if basic_datatypes? body_param["items"]["type"]
         temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => body_param["items"]["type"]} }
-      elsif c? body_param["items"]["type"]
+      elsif existing_type? body_param["items"]["type"]
         temp_hash[body_param["name"]] = { "type" => "array", "items" => { "type" => get_schema_reference(body_param["items"]["type"]) } }
       else
         # create new schema
@@ -317,12 +318,14 @@ end
 
 def generate_parameter_internal s
   temp_array = []
+
   s.paramset&.each do |inline_param|
-    temp_hash = {}  
-    temp_hash["name"] = inline_param
-    temp_hash["in"] = "path"
-    temp_hash["required"] = true
-    temp_hash["type"] = "String"
+    temp_hash = {
+      "name" => inline_param,
+      "in" => "path",
+      "required" => true,
+      "type" => "string",
+    }  
     temp_array << temp_hash
   end
 
@@ -339,11 +342,13 @@ def generate_parameter_internal s
       body_parameters_internal_array << temp_hash
     end
 
-    body_param_object = {}
-    body_param_object["in"] = "body"
-    body_param_object["name"] = "body"
-    body_param_object["description"] = "parameters to be sent in request"
-    body_param_object["required"] = true
+    body_param_object = {
+      "in" => "body",
+      "name" => "body",
+      "description" => "parameters to be sent in request",
+      "required" => true,
+    }
+
     if s.type == 1 || s.type == 3 
       body_param_object["schema"] = { "$ref" => generate_schema_internal(body_parameters_internal_array, s.tag + s.id) }
     end
@@ -360,17 +365,19 @@ def generate_response_internal service_obj
   temp_hash
 end
 
-def generate_service_internal service_obj
-  temp_hash = {}
+def generate_service_internal service_obj # TODO
+  {
+    "tags" => [service_obj.tag],
+    "description" => service_obj.comment
+  }
   temp_hash["tags"] = [ service_obj.tag ]
   temp_hash["summary"] =  service_obj.summary
-  temp_hash["description"] = service_obj.comment
+  temp_hash["description"] = 
   temp_hash["consumes"] = %w[ application/json application/xml]
   temp_hash["produces"] = %w[ application/json application/xml]
   temp_hash["parameters"] = generate_parameter_internal service_obj
   temp_hash["responses"] = generate_response_internal service_obj
   temp_hash["deprecated"] = service_obj.deprecated ? true : false
-  temp_hash
 end
 
 def generate_path_internal services 
@@ -423,15 +430,15 @@ def create_json(title, host = "127.0.0.1", baseurl = "/", tag_and_path_based_ser
     { 
       "swagger": "2.0",
       "info": {
-              "description": "",
-              "version": "1.0.0",
-              "title": title,
-              "termsOfService": "http://swagger.io/terms/",
-              "license": {
-                  "name": "Apache 2.0",
-                  "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-                  }
-              }
+        "description": "",
+        "version": "1.0.0",
+        "title": title,
+        "termsOfService": "http://swagger.io/terms/",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html",
+          },
+        },
     }
 
   js["host"] = host

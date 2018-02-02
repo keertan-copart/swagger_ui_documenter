@@ -28,7 +28,15 @@ Example format:
 	  { status: 'success' }.to_json
 	end
 
-	# Anything written before the next service will be added to its description 
+	#-
+	#200 :  success!
+	#405 :  error
+	#
+	#.... further codes..
+	#
+	#-
+
+	# Anything written in single comment before the next service will be added to its description 
 
 	post '/lots/reject' do #writing summary here is unknown to aliens # in summary just include -d to make it depricated
 	 return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array)
