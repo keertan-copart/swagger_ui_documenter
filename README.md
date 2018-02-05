@@ -53,7 +53,7 @@ Example format: [OLD Version]
 
 
 
-<h4 id="newversion">Example format: [New Version]</h4>
+<h2 id="newversion">Example format: [New Version]</h2>
 
 This file would be an extract from inside a ycs-api project.
 
