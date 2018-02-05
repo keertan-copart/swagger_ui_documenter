@@ -93,15 +93,56 @@ Inside query.rb:
 
 Inside payload.rb:
 
+class Payload
+  cattr_accessor :pay_load, :ref_schema  # payload is an array of hashes, and ref_schema is a hash
+
+  def initialize
+
+    pay_load = [
+      { 
+        "name":"status",
+        "in":"query", # if this data should be sent in the query; note: the path variables are not needed to be included in payload.
+        "description":"Status values that need to be considered for filter",
+        "required":true,  # assign false if not a required parameter
+        "type":"array",
+        "items":
+          {
+            "type":"string",
+            "enum":["available","pending","sold"],
+            "default":"available"
+          }
+        },
+
+      {
+            "in":"body",
+            "name":"body",
+            "description":"Pet object that needs to be added to the store",
+            "required":true,
+            
+            # if the data to be sent is of a particular format, defined already then add a reference to it.
+            # or  if you want to define a custom format, define it in ref_schema. see <a href="#response">inside response.rb</a> for more details on format
+
+            "schema":  
+            {
+              "$ref":"#/definitions/Pet"
+            }
+        }
+    ]
+
+    ref_schema = {
+      # for details on ref_schema, go down and see inside response.rb
+      }
+  end
+end
 
 
 
 
 
 
-Inside response.rb:
+<h4 id="#response">Inside response.rb:</h4>
 
-There should be a model of response 
+There should be a model of response.  
 ```
   class Response
     cattr_accesor :response_codes, :ref_schema  # here, response_codes and ref_schema are required hashes. 
@@ -123,7 +164,7 @@ There should be a model of response
                         "type" => "string"
                        }
 
-                      # if the return type has a specific schema (say, lot_schema)that you want to define, then 
+                      # if the return type has a specific schema(say, Lot_schema) that you want to define, then 
 
                       "$ref"=> "#/definitions/Lot_schema" # custom schemas should start with a capitalized letter
 
@@ -148,27 +189,26 @@ There should be a model of response
       # if there are no references to any schema, then you can define an empty hash.
       
       ref_schema = {
+        # for simple schema: 
           
-          # for simple schema: 
-          
-          "Lot_schema" => {
-            "type" => "integer",
-            "format" => "int64" # not compulsory
-          },
+        "Lot_schema" => {
+          "type" => "integer",
+          "format" => "int64" # not compulsory
+        },
 
-          # if your schema is complex, then you can also add references inside: 
+        # if your schema is complex, then you can also add references inside: 
 
-          "Yard_member" =>{
-            "type" => "object",
-            "required" => ["name"], # not compulsory
-            "properties" => {
-              "id" => {
-                "type" => "integer",
-                "format":"int64"
-                },
+        "Yard_member" =>{
+          "type" => "object",
+          "required" => ["name"], # not compulsory
+          "properties" => {
+            "id" => {
+              "type" => "integer",
+              "format":"int64"
+              },
             "category" => {
               "$ref":"#/definitions/Category" # this Category is already defined, or may be defined in the same hash along with Yard_member
-              },
+            },
             "name" => {
               "type" => "string",
               "example" => "doggie"
