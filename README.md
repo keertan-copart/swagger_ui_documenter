@@ -98,9 +98,7 @@ Inside response.rb:
 There should be a model of response 
 ```
 	class Response
-		cattr_accesor :response_codes, :lot_schema	# here, response_codes is a required hash. but lot_schema is not compulsory, 
-													# it is included only when a specific schema is needed to be defined. lot_schema is just a name. 
-													# it could be any schema you want to define.
+		cattr_accesor :response_codes, :ref_schema	# here, response_codes and ref_schema are required hashes. 
 
 		def initialize
 			response_codes = {
@@ -123,9 +121,11 @@ There should be a model of response
 
 									        		# if the return type has a specific schema (say, lot_schema)that you want to define, then 
 
-							          				"$ref"=> "#/definitions/lot_schema"	# Now, you need to add a lot_schema hash also that defines this reference
-							          													# if, you have already defined this schema before, then simply give the reference.
-							          													# Make, sure the names you use for the schema matches the one you used before.
+							          			"$ref"=> "#/definitions/Lot_schema"	# custom schemas should start with a capitalized letter
+
+							          			# Now, you need to add a lot_schema hash also that defines this reference
+							          			# if, you have already defined this schema before, then simply give the reference.
+							          			# Make, sure the names you use for the schema matches the one you used before.
 							        	}
 							    	}
 							    }
@@ -136,28 +136,48 @@ There should be a model of response
 							},
 
 						"default": {
-					    			"description": "Unexpected error",
-					    			"content": {
-					      				"application/json": {
-					        				"schema": {
-					          					"$ref": "#/components/schemas/ErrorModel"
-					        				}
-					      				}
-					    			}
-		  					}
+					    "description": "Unexpected error",
+		  				}
 						
 					}
 		
-			lot_schema = {
-					"type" => "string"
+			# if there are no references to any schema, then you can define an empty hash.
+			
+			ref_schema = {
+					
+					# for simple schema: 
+					
+					"Lot_schema" => {
+						"type" => "integer",
+						"format" => "int64" # not compulsory
+					},
 
-			}	
+					# if your schema is complex, then you can also add references inside: 
 
+					"Yard_member" =>{
+						"type" => "object",
+						"required" => ["name"],	# not compulsory
+						"properties" => {
+							"id" => {
+								"type" => "integer",
+								"format":"int64"
+								},
+						"category" => {
+							"$ref":"#/definitions/Category"	# this Category is already defined, or may be defined in the same hash along with Yard_member
+							},
+						"name" => {
+							"type" => "string",
+							"example" => "doggie"
+							}
+						}
+					}
+			}
 
 		end
 	end
 
 ```
+
 
 
 
