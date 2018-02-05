@@ -91,7 +91,16 @@ Inside query.rb:
       lot : integer
 
 
-Inside payload.rb:
+<h4 id="#payload">Inside payload.rb:</h4>
+
+The paramters passed through path, like ```lots/get_lot_status/:lot_id```
+Here, {lot_id} is passed through path, it is defaultly considered as a string.
+
+if you have something like ```lots/get_lots_by_filter/filters```
+and you have to pass an array of all filters applied, then it is considered as query parameter.
+
+query parameters have to be included in the payload. 
+All body parameters should also be included in the payload
 
 ```
 class Payload
@@ -99,39 +108,46 @@ class Payload
 
   def initialize
 
-    pay_load = [
+    pay_load = [  # array of hashes
+      
+      {
+        "name" => "simple_example",
+        "in" => "body",
+        "description" => "simple description",
+        "required" => true,
+        "type" => "string"
+        },
+
       { 
-        "name":"status",
-        "in":"query", # if this data should be sent in the query; note: the path variables are not needed to be included in payload.
-        "description":"Status values that need to be considered for filter",
-        "required":true,  # assign false if not a required parameter
-        "type":"array",
-        "items":
-          {
-            "type":"string",
-            "enum":["available","pending","sold"],
-            "default":"available"
+        "name" => "status",
+        "in" => "query", # if this data should be sent in the query; note: the path variables are not needed to be included in payload.
+        "description" => "Status values that need to be considered for filter",
+        "required" => true,  # assign false if not a required parameter
+        "type" => "array", # if type is array, then items have to be defined, or else not needed.
+        "items" => {
+            "type" => "string",
+            "enum" => ["available","pending","sold"],  # if enum, else not required; Note: notice its an array of possible values
+            "default" => "available" # if an enum, then default is needed.
           }
         },
 
       {
-            "in":"body",
-            "name":"body",
-            "description":"Pet object that needs to be added to the store",
-            "required":true,
+        "name" => "body",
+        "in" => "body",        
+        "description" => "Pet object that needs to be added to the store",
+        "required" => true,
             
-            # if the data to be sent is of a particular format, defined already then add a reference to it.
-            # or  if you want to define a custom format, define it in ref_schema. see 'inside response.rb' for more details on format
+        # if the data to be sent is of a particular format, defined already then add a reference to it.
+        # or if you want to define a custom format, define it in ref_schema. see 'Inside response.rb' for more details on format
 
-            "schema":  
-            {
-              "$ref":"#/definitions/Pet"
-            }
+        "schema" =>{
+            "$ref":"#/definitions/Category"  # this Category is already defined in your project
+          }
         }
     ]
 
     ref_schema = {
-      # for details on ref_schema, go down and see 'inside response.rb'
+      # for details on ref_schema, go down and see 'Inside response.rb'
       }
   end
 end
