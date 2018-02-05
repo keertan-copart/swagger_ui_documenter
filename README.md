@@ -93,6 +93,7 @@ Inside query.rb:
 
 Inside payload.rb:
 
+```
 class Payload
   cattr_accessor :pay_load, :ref_schema  # payload is an array of hashes, and ref_schema is a hash
 
@@ -120,7 +121,7 @@ class Payload
             "required":true,
             
             # if the data to be sent is of a particular format, defined already then add a reference to it.
-            # or  if you want to define a custom format, define it in ref_schema. see <a href="#response">inside response.rb</a> for more details on format
+            # or  if you want to define a custom format, define it in ref_schema. see 'inside response.rb' for more details on format
 
             "schema":  
             {
@@ -130,13 +131,13 @@ class Payload
     ]
 
     ref_schema = {
-      # for details on ref_schema, go down and see inside response.rb
+      # for details on ref_schema, go down and see 'inside response.rb'
       }
   end
 end
 
 
-
+```
 
 
 
