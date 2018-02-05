@@ -1,6 +1,9 @@
 #swagger_ui_documenter
 Using swagger_ui to feed a custom json
 
+<a href="#newversion">Goto New Version</a>
+
+
 Example format: [OLD Version]
 
 ```
@@ -48,7 +51,9 @@ Example format: [OLD Version]
 
 ```
 
-Example format: [New Version]
+
+
+<h4 id="#newversion">Example format: [New Version]</h4>
 
 This file would be an extract from inside a ycs-api project.
 
@@ -161,7 +166,8 @@ There should be a model of response.
     def initialize
       response_codes = {
         "200" => {
-            "description" => "a lot number to be returned", # if the response does not have a return value, you need not include the content.
+            "description" => "a lot number to be returned",
+              # if the response does not have a return value, you need not include the content
               "content" => {
                  "application/json" => {
                    "schema" => {
