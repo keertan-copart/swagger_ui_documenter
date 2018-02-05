@@ -70,12 +70,7 @@ path : ycs-api/app/handlers/FooHandler.rb
 	  params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
 	  { status: 'success' }.to_json
 	end
-	< single line/ multiple line gap >
-	#-
-	# 200 :  success!
-	# 405 :  error
-	# <further codes>
-	#-
+	
 
 ```
 
@@ -102,11 +97,65 @@ Inside response.rb:
 
 There should be a model of response 
 ```
-	{
-		code : int
-		status : string
-		... 
-	}
+	class Response
+		cattr_accesor :response_codes, :lot_schema	# here, response_codes is a required hash. but lot_schema is not compulsory, 
+													# it is included only when a specific schema is needed to be defined. lot_schema is just a name. 
+													# it could be any schema you want to define.
+
+		def initialize
+			response_codes = {
+				
+						"200" => {
+							"description" => "a lot number to be returned",	# if the response does not have a return value, you need not include the content.
+							    "content" => {
+							      	"application/json" => {
+							        	"schema" => {
+
+							        				"type" => "string"	# if the return type of response is a string
+							        				"type" => "integer"	# if the return type of response is an integer
+
+							        				# if type is an array, then
+
+							        				"type" => "array"
+							        				"items" => {
+									        			"type" => "string"
+									        		}
+
+									        		# if the return type has a specific schema (say, lot_schema)that you want to define, then 
+
+							          				"$ref"=> "#/definitions/lot_schema"	# Now, you need to add a lot_schema hash also that defines this reference
+							          													# if, you have already defined this schema before, then simply give the reference.
+							          													# Make, sure the names you use for the schema matches the one you used before.
+							        	}
+							    	}
+							    }
+							},
+
+						"405" => {
+							"description" => "invalid input"
+							},
+
+						"default": {
+					    			"description": "Unexpected error",
+					    			"content": {
+					      				"application/json": {
+					        				"schema": {
+					          					"$ref": "#/components/schemas/ErrorModel"
+					        				}
+					      				}
+					    			}
+		  					}
+						
+					}
+		
+			lot_schema = {
+
+
+			}	
+
+
+		end
+	end
 
 ```
 

@@ -1,15 +1,11 @@
 
 
-class Ycs::Get_doc
-	attr_reader :trial
+module hello
 
-	def initialize
-		@trial = "hello"
+	def write_test
+		puts "this is something!"
 	end
 
-end 
 
+end
 
-
-gg = Get_doc.new
-puts gg.trial
