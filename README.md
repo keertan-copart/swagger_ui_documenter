@@ -80,21 +80,15 @@ path : ycs-api/spec/foo/sample_name/
 
 In this folder, we need to have 
 
- - query.rb
- - payload.rb  (type = get/delete, does not need to have this.) 
- - response.rb
-
-Inside query.rb:
-
-  Initial thought are to have a hash
-  like: name : string
-      lot : integer
+ - <a href="#payload">payload.rb</a> (for get/delete, only query parameters are included in payload)
+ - <a href="#response">response.rb </a>
 
 
 <h4 id="#payload">Inside payload.rb:</h4>
 
 The paramters passed through path, like ```lots/get_lot_status/:lot_id```
 Here, {lot_id} is passed through path, it is defaultly considered as a string.
+Note : Path parameters need NOT be included in the payload
 
 if you have something like ```lots/get_lots_by_filter/filters```
 and you have to pass an array of all filters applied, then it is considered as query parameter.
