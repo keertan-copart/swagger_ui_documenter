@@ -149,7 +149,7 @@ There should be a model of response
 					}
 		
 			lot_schema = {
-
+					"type" => "string"
 
 			}	
 
