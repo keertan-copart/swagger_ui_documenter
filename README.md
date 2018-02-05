@@ -1,7 +1,7 @@
 #swagger_ui_documenter
 Using swagger_ui to feed a custom json
 
-<a href="#newversion">Goto New Version</a>
+<a href="#newversion"><h2>Go to New Version</h2></a>
 
 
 Example format: [OLD Version]
