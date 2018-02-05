@@ -53,7 +53,7 @@ Example format: [OLD Version]
 
 
 
-<h4 id="#newversion">Example format: [New Version]</h4>
+<h4 id="newversion">Example format: [New Version]</h4>
 
 This file would be an extract from inside a ycs-api project.
 
@@ -89,7 +89,7 @@ In this folder, we need to have
  - <a href="#response">response.rb </a>
 
 
-<h4 id="#payload">Inside payload.rb:</h4>
+<h4 id="payload">Inside payload.rb:</h4>
 
 The paramters passed through path, like ```lots/get_lot_status/:lot_id```
 Here, {lot_id} is passed through path, it is defaultly considered as a string.
@@ -156,7 +156,7 @@ end
 
 
 
-<h4 id="#response">Inside response.rb:</h4>
+<h4 id="response">Inside response.rb:</h4>
 
 There should be a model of response.  
 ```
