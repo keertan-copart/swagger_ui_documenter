@@ -93,53 +93,57 @@ Inside query.rb:
 
 Inside payload.rb:
 
+
+
+
+
+
+
 Inside response.rb:
 
 There should be a model of response 
 ```
-	class Response
-		cattr_accesor :response_codes, :ref_schema	# here, response_codes and ref_schema are required hashes. 
+  class Response
+	  cattr_accesor :response_codes, :ref_schema	# here, response_codes and ref_schema are required hashes. 
 
-		def initialize
-			response_codes = {
-				
-						"200" => {
-							"description" => "a lot number to be returned",	# if the response does not have a return value, you need not include the content.
-							    "content" => {
-							      	"application/json" => {
-							        	"schema" => {
+	  def initialize
+		  response_codes = {
+				"200" => {
+						"description" => "a lot number to be returned",	# if the response does not have a return value, you need not include the content.
+						  "content" => {
+							   "application/json" => {
+							     "schema" => {
+                      "type" => "string"	# if the return type of response is a string
+							        "type" => "integer"	# if the return type of response is an integer
 
-							        				"type" => "string"	# if the return type of response is a string
-							        				"type" => "integer"	# if the return type of response is an integer
+							        # if type is an array, then
 
-							        				# if type is an array, then
+							        "type" => "array"
+							        "items" => {
+									      "type" => "string"
+									     }
 
-							        				"type" => "array"
-							        				"items" => {
-									        			"type" => "string"
-									        		}
+									    # if the return type has a specific schema (say, lot_schema)that you want to define, then 
 
-									        		# if the return type has a specific schema (say, lot_schema)that you want to define, then 
+							        "$ref"=> "#/definitions/Lot_schema"	# custom schemas should start with a capitalized letter
 
-							          			"$ref"=> "#/definitions/Lot_schema"	# custom schemas should start with a capitalized letter
-
-							          			# Now, you need to add a lot_schema hash also that defines this reference
-							          			# if, you have already defined this schema before, then simply give the reference.
-							          			# Make, sure the names you use for the schema matches the one you used before.
-							        	}
-							    	}
+							        # Now, you need to add a lot_schema hash also that defines this reference
+							        # if, you have already defined this schema before, then simply give the reference.
+							        # Make, sure the names you use for the schema matches the one you used before.
+							      }
 							    }
+							  }
 							},
 
-						"405" => {
-							"description" => "invalid input"
-							},
+			  "405" => {
+					"description" => "invalid input"
+				  },
 
-						"default": {
-					    "description": "Unexpected error",
-		  				}
+				"default": {
+					 "description": "Unexpected error",
+		  		}
 						
-					}
+			}
 		
 			# if there are no references to any schema, then you can define an empty hash.
 			
