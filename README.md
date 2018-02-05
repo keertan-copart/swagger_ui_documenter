@@ -96,7 +96,7 @@ Inside payload.rb:
 Inside response.rb:
 
 There should be a model of response 
-
+```
 	class Response
 		cattr_accesor :response_codes, :ref_schema	# here, response_codes and ref_schema are required hashes. 
 
@@ -176,7 +176,7 @@ There should be a model of response
 		end
 	end
 
-
+```
 
 
 
