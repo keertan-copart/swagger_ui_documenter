@@ -16,32 +16,32 @@ Example format: [OLD Version]
 
 
 ```
- 	#host = '0.0.0.0:9292'
-  	#baseurl = '/transporter'
+  #host = '0.0.0.0:9292'
+    #baseurl = '/transporter'
 
-  	#body parameters  - the next line should follow with parameters in given format, and this line should contain 'body parameters'
-  	# lots : array[string] : required, something : integer
-	post '/lots/accept' do # used for accept lot information (Summary)  
-	  return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
-	  params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
-	  { status: 'success' }.to_json
-	end
+    #body parameters  - the next line should follow with parameters in given format, and this line should contain 'body parameters'
+    # lots : array[string] : required, something : integer
+  post '/lots/accept' do # used for accept lot information (Summary)  
+    return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
+    params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
+    { status: 'success' }.to_json
+  end
 
-	#-
-	#200 :  success!
-	#405 :  error
-	#
-	#.... further codes..
-	#
-	#-
+  #-
+  #200 :  success!
+  #405 :  error
+  #
+  #.... further codes..
+  #
+  #-
 
-	# Anything written in single comment before the next service will be added to its description 
+  # Anything written in single comment before the next service will be added to its description 
 
-	post '/lots/reject' do #writing summary here is unknown to aliens # in summary just include -d to make it depricated
-	 return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array)
-	 params[:lots].each { |number| Ycs::Transporter::UpdateLot.rejected(number) }
-	 { status: 'success' }.to_json
-	end
+  post '/lots/reject' do #writing summary here is unknown to aliens # in summary just include -d to make it depricated
+   return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array)
+   params[:lots].each { |number| Ycs::Transporter::UpdateLot.rejected(number) }
+   { status: 'success' }.to_json
+  end
 
 
 
@@ -55,22 +55,22 @@ This file would be an extract from inside a ycs-api project.
 path : ycs-api/app/handlers/FooHandler.rb 
 
 ```
-	class Ycs::FooHandler < Boo
-	# name : The Foo Module
-	# description : used to do this and that task
+  class Ycs::FooHandler < Boo
+  # name : The Foo Module
+  # description : used to do this and that task
 
-  	# service_name :  sample_name
-  	# service_description : sample_description
-  	#
-  	#<multiple line description supported> 
-  	#
-	< single line/ multiple line gap >
-	post '/lots/accept' do 
-	  return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
-	  params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
-	  { status: 'success' }.to_json
-	end
-	
+    # service_name :  sample_name
+    # service_description : sample_description
+    #
+    #<multiple line description supported> 
+    #
+  < single line/ multiple line gap >
+  post '/lots/accept' do 
+    return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
+    params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
+    { status: 'success' }.to_json
+  end
+  
 
 ```
 
@@ -86,9 +86,9 @@ In this folder, we need to have
 
 Inside query.rb:
 
-	Initial thought are to have a hash
-	like: name : string
-		  lot : integer
+  Initial thought are to have a hash
+  like: name : string
+      lot : integer
 
 
 Inside payload.rb:
@@ -104,81 +104,81 @@ Inside response.rb:
 There should be a model of response 
 ```
   class Response
-	  cattr_accesor :response_codes, :ref_schema	# here, response_codes and ref_schema are required hashes. 
+    cattr_accesor :response_codes, :ref_schema  # here, response_codes and ref_schema are required hashes. 
 
-	  def initialize
-		  response_codes = {
-				"200" => {
-						"description" => "a lot number to be returned",	# if the response does not have a return value, you need not include the content.
-						  "content" => {
-							   "application/json" => {
-							     "schema" => {
-                      "type" => "string"	# if the return type of response is a string
-							        "type" => "integer"	# if the return type of response is an integer
+    def initialize
+      response_codes = {
+        "200" => {
+            "description" => "a lot number to be returned", # if the response does not have a return value, you need not include the content.
+              "content" => {
+                 "application/json" => {
+                   "schema" => {
+                      "type" => "string"  # if the return type of response is a string
+                      "type" => "integer" # if the return type of response is an integer
 
-							        # if type is an array, then
+                      # if type is an array, then
 
-							        "type" => "array"
-							        "items" => {
-									      "type" => "string"
-									     }
+                      "type" => "array"
+                      "items" => {
+                        "type" => "string"
+                       }
 
-									    # if the return type has a specific schema (say, lot_schema)that you want to define, then 
+                      # if the return type has a specific schema (say, lot_schema)that you want to define, then 
 
-							        "$ref"=> "#/definitions/Lot_schema"	# custom schemas should start with a capitalized letter
+                      "$ref"=> "#/definitions/Lot_schema" # custom schemas should start with a capitalized letter
 
-							        # Now, you need to add a lot_schema hash also that defines this reference
-							        # if, you have already defined this schema before, then simply give the reference.
-							        # Make, sure the names you use for the schema matches the one you used before.
-							      }
-							    }
-							  }
-							},
+                      # Now, you need to add a lot_schema hash also that defines this reference
+                      # if, you have already defined this schema before, then simply give the reference.
+                      # Make, sure the names you use for the schema matches the one you used before.
+                    }
+                  }
+                }
+              },
 
-			  "405" => {
-					"description" => "invalid input"
-				  },
+        "405" => {
+          "description" => "invalid input"
+          },
 
-				"default": {
-					 "description": "Unexpected error",
-		  		}
-						
-			}
-		
-			# if there are no references to any schema, then you can define an empty hash.
-			
-			ref_schema = {
-					
-					# for simple schema: 
-					
-					"Lot_schema" => {
-						"type" => "integer",
-						"format" => "int64" # not compulsory
-					},
+        "default": {
+           "description": "Unexpected error",
+          }
+            
+      }
+    
+      # if there are no references to any schema, then you can define an empty hash.
+      
+      ref_schema = {
+          
+          # for simple schema: 
+          
+          "Lot_schema" => {
+            "type" => "integer",
+            "format" => "int64" # not compulsory
+          },
 
-					# if your schema is complex, then you can also add references inside: 
+          # if your schema is complex, then you can also add references inside: 
 
-					"Yard_member" =>{
-						"type" => "object",
-						"required" => ["name"],	# not compulsory
-						"properties" => {
-							"id" => {
-								"type" => "integer",
-								"format":"int64"
-								},
-						"category" => {
-							"$ref":"#/definitions/Category"	# this Category is already defined, or may be defined in the same hash along with Yard_member
-							},
-						"name" => {
-							"type" => "string",
-							"example" => "doggie"
-							}
-						}
-					}
-			}
+          "Yard_member" =>{
+            "type" => "object",
+            "required" => ["name"], # not compulsory
+            "properties" => {
+              "id" => {
+                "type" => "integer",
+                "format":"int64"
+                },
+            "category" => {
+              "$ref":"#/definitions/Category" # this Category is already defined, or may be defined in the same hash along with Yard_member
+              },
+            "name" => {
+              "type" => "string",
+              "example" => "doggie"
+              }
+            }
+          }
+      }
 
-		end
-	end
+    end
+  end
 
 ```
 
