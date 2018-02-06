@@ -3,7 +3,7 @@ Using swagger_ui to feed a custom json
 
 <a href="#newversion"><h2>Go to New Version</h2></a>
 
-
+<div>
 Example format: [OLD Version]
 
 ```
@@ -51,7 +51,7 @@ Example format: [OLD Version]
 
 ```
 
-
+</div>
 
 <h2 id="newversion">Example format: [New Version]</h2>
 
@@ -61,16 +61,19 @@ path : ycs-api/app/handlers/FooHandler.rb
 
 ```
   class Ycs::FooHandler < Boo
-  # name : The Foo Module
-  # description : used to do this and that task
+    
+    # group_description: used to do this and that task use -d in description to flag as deprecated
 
-    # service_name :  sample_name
-    # service_description : sample_description
+    # TODO: This endpoint is ugly. Fix it. - this won't be in description
+
+    # name: 
+    # summary:  sample_name
+    # description: sample_description
     #
     #<multiple line description supported> 
     #
-  < single line/ multiple line gap >
-  post '/lots/accept' do 
+  < single line/ multiple line gap - optional >
+  post '/lots/accept' do
     return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
     params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
     { status: 'success' }.to_json
@@ -89,6 +92,13 @@ In this folder, we need to have
  - <a href="#response">response.rb </a>
 
 
+ error.json
+ response.json
+ request.json
+ header.json
+ query.json
+
+
 <h4 id="payload">Inside payload.rb:</h4>
 
 The paramters passed through path, like ```lots/get_lot_status/:lot_id```
@@ -103,11 +113,7 @@ All body parameters should also be included in the payload
 
 ```
 class Payload
-  cattr_accessor :pay_load, :ref_schema  # payload is an array of hashes, and ref_schema is a hash
-
-  def initialize
-
-    pay_load = [  # array of hashes
+  @@pay_load = [  # array of hashes
       
       {
         "name" => "simple_example",
@@ -140,15 +146,24 @@ class Payload
         # or if you want to define a custom format, define it in ref_schema. see 'Inside response.rb' for more details on format
 
         "schema" =>{
-            "$ref":"#/definitions/Category"  # this Category is already defined in your project
+            "$ref":"#/definitions/Category"  # Assuming this Category is already defined in your project
           }
         }
     ]
 
-    ref_schema = {
+  @@ref_schema = {
       # for details on ref_schema, go down and see 'Inside response.rb'
       }
+  
+
+  def self.pay_load
+    @@pay_load
   end
+
+  def self.ref_schema
+    @@ref_schema
+  end
+
 end
 
 
@@ -161,10 +176,7 @@ end
 There should be a model of response.  
 ```
   class Response
-    cattr_accesor :response_codes, :ref_schema  # here, response_codes and ref_schema are required hashes. 
-
-    def initialize
-      response_codes = {
+    @@response_codes = {
         "200" => {
             "description" => "a lot number to be returned",
               # if the response does not have a return value, you need not include the content
@@ -205,7 +217,7 @@ There should be a model of response.
     
       # if there are no references to any schema, then you can define an empty hash.
       
-      ref_schema = {
+    @@ref_schema = {
         # for simple schema: 
           
         "Lot_schema" => {
@@ -234,6 +246,13 @@ There should be a model of response.
           }
       }
 
+
+    def self.response_codes
+      @@response_codes
+    end
+
+    def self.ref_schema
+      @@ref_schema
     end
   end
 
