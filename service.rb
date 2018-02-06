@@ -85,7 +85,7 @@ class Service
 
   def attach_query_params
     #get body params from the spec files given
-    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/query.json"
+    spec_file_path = "./../spec/doc/" + @tag + "/"+ @service_name + "/query.json"
     #spec_file = File.read(spec_file_path)
     begin
       File.open(spec_file_path, 'r') do |f|
@@ -99,7 +99,7 @@ class Service
 
   def attach_body_params
     #get body params from the spec files given
-    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/request.json"
+    spec_file_path = "./../spec/doc/" + @tag + "/"+ @service_name + "/request.json"
     #spec_file = File.read(spec_file_path)
     File.open(spec_file_path, 'r') do |f|
       spec_file = f.read
@@ -109,7 +109,7 @@ class Service
   end
 
   def attach_response_codes
-    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/response.json"
+    spec_file_path = "./../spec/doc/" + @tag + "/"+ @service_name + "/response.json"
     #spec_file = File.read(spec_file_path)
     File.open(spec_file_path, 'r') do |f|
       spec_file = f.read
@@ -119,14 +119,15 @@ class Service
     #Service.add_to_global_schema Response.ref_schema
 
     #check errors.json
-    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/errors.json"
+    spec_file_path = "./../spec/doc/" + @tag + "/"+ @service_name + "/errors.json"
     #spec_file = File.read(spec_file_path)
     File.open(spec_file_path, 'r') do |f|
       spec_file = f.read
       error_codes = JSON.parse(spec_file)
+      @response_codes = @response_codes.merge(error_codes)
     end
 
-    @response_codes = @response_codes.merge(error_codes)
+
 
 
 

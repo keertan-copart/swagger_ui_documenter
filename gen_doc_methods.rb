@@ -16,6 +16,10 @@ module GenDocMethods
     line.sub("#","").split(":")[1]&.strip || line.sub("#","")
   end
 
+  def service_description line
+    line.sub("#","").split(":")[1]&.strip || line.sub("#","")
+  end
+
   def group_description? line
     line.include?("group_description") 
   end
@@ -33,7 +37,7 @@ module GenDocMethods
   end
 
   def service_description? line
-    line.include?("description")
+    /\s(description).*:(.*)/.match(line)
   end
 
   def capture_host_and_baseurl line
@@ -116,11 +120,16 @@ module GenDocMethods
     end
 
     # adding query parameters
-    
+    puts service_obj.query_params
+    service_obj.query_params&.each do |key, value|
+      temp_hash = {
+        "in" => "query",
+        "name" => key,       
+      }  
+      temp_array << temp_hash.merge(value)
+    end
 
     # adding body parameters
-    puts service_obj.body_params
-    #temp_array.concat service_obj.body_params
     body_params = {
       "in" => "body",
       "name" => "body",

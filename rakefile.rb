@@ -32,17 +32,19 @@ namespace 'doc' do
         group_description = GenDocMethods.group_description(line) if GenDocMethods.group_description?(line)        
         service_name = GenDocMethods.service_name(line) if GenDocMethods.service_name?(line)
         summary = GenDocMethods.summary(line) if GenDocMethods.summary?(line)
-        if !service_description_flag && GenDocMethods.service_description?(line)
+        if GenDocMethods.service_description?(line)
+          service_description += GenDocMethods.service_description line
           service_description_flag = true
-        elsif service_description_flag
-          service_description += GenDocMethods.format_comment line
+        end
+        if service_description_flag
+          service_description += GenDocMethods.service_description line
         end
       elsif hotword? line
         service_name = "default" if service_name.empty?
         summary = "default" if summary.empty?
         service_description = "Not provided" if service_description.empty?        
         group_description = "Not provided" if group_description.empty?
-        s = Service.new(service_name, summary, handler_tag, service_description, GenDocMethods.deprecated?(service_description))     #TODO   
+        s = Service.new(service_name, summary, handler_tag, service_description, GenDocMethods.deprecated?(summary))     #TODO   
         s.extraction line
         s.add_tag(handler_tag, group_description)       
         s.attach_body_params  

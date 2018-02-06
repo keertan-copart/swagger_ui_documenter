@@ -67,7 +67,7 @@ path : ycs-api/app/handlers/FooHandler.rb
     # TODO:  - this won't be in description
 
     # name: has to be a unique name for service
-    # summary:  sample_name use -d anywhere in this line to make it deprecated
+    # summary:  sample summary; use -d anywhere in this line to make it deprecated
     # description: sample_description
     #
     # multiple line description
@@ -84,20 +84,18 @@ path : ycs-api/app/handlers/FooHandler.rb
 
 The corresponding files for given service ```post '/lots/accept'``` will be stored in 
 
-path : ycs-api/spec/foo/sample_name/ 
+path : ycs-api/spec/doc/foo/sample_name/ 
 
 In this folder, we need to have 
 
   (for get/delete, only query parameters are included in payload)
- - <a href="#response">response.json</a>
 
 
- error.json
- response.json
- - <a href="#request">request.json</a>
- header.json
- query.json
-
+- <a href="#error">error.json</a>
+- <a href="#response">response.json</a>
+- <a href="#request">request.json</a>
+- <a href="#query">query.json</a>
+- header.json : Do not include to use the default headers defined.
 
 <h4 id="request">Inside request.json:</h4>
 
@@ -140,86 +138,14 @@ request.json
 There should be a model of response.  
 
 ```
-  class Response
-    @@response_codes = {
-        "200" => {
-            "description" => "a lot number to be returned",
-              # if the response does not have a return value, you need not include the content
-              "content" => {
-                 "application/json" => {
-                   "schema" => {
-                      "type" => "string"  # if the return type of response is a string
-                      "type" => "integer" # if the return type of response is an integer
+    { 
+        "Lot_schema" : {
+          "type" : "integer",
+          "format" : "int64"
+        }
 
-                      # if type is an array, then
-
-                      "type" => "array"
-                      "items" => {
-                        "type" => "string"
-                       }
-
-                      # if the return type has a specific schema(say, Lot_schema) that you want to define, then 
-
-                      "$ref"=> "#/definitions/Lot_schema" # custom schemas should start with a capitalized letter
-
-                      # Now, you need to add a lot_schema hash also that defines this reference
-                      # if, you have already defined this schema before, then simply give the reference.
-                      # Make, sure the names you use for the schema matches the one you used before.
-                    }
-                  }
-                }
-              },
-
-        "405" => {
-          "description" => "invalid input"
-          },
-
-        "default": {
-           "description": "Unexpected error",
-          }
-            
-      }
-    
-      # if there are no references to any schema, then you can define an empty hash.
-      
-    @@ref_schema = {
-        # for simple schema: 
-          
-        "Lot_schema" => {
-          "type" => "integer",
-          "format" => "int64" # not compulsory
-        },
-
-        # if your schema is complex, then you can also add references inside: 
-
-        "Yard_member" =>{
-          "type" => "object",
-          "required" => ["name"], # not compulsory
-          "properties" => {
-            "id" => {
-              "type" => "integer",
-              "format":"int64"
-              },
-            "category" => {
-              "$ref":"#/definitions/Category" # this Category is already defined, or may be defined in the same hash along with Yard_member
-            },
-            "name" => {
-              "type" => "string",
-              "example" => "doggie"
-              }
-            }
-          }
       }
 
-
-    def self.response_codes
-      @@response_codes
-    end
-
-    def self.ref_schema
-      @@ref_schema
-    end
-  end
 
 ```
 
@@ -227,9 +153,9 @@ There should be a model of response.
 
 
 
-errors.json
+<h4 id="errors">errors.json</h4>
 
-Example:
+Example errors.json:
 
 ```
 
@@ -247,6 +173,29 @@ Example:
 
 
 
+
+<h4 id="query">query.json</h4>
+
+Example errors.json:
+
+```
+
+{
+    
+   "lotno" : { 
+        "description" : "simple description",
+        "required" : true,
+        "type" : "integer"
+        },
+
+    "yardname" : {
+        "description" : "lot object that needs to be added to the store",
+        "required" : true,
+        "type" : "string"
+        }
+}
+
+```
 
 
 
