@@ -114,7 +114,21 @@ module GenDocMethods
       }  
       temp_array << temp_hash
     end
-    temp_array.concat service_obj.body_params
+
+    # adding query parameters
+    
+
+    # adding body parameters
+    puts service_obj.body_params
+    #temp_array.concat service_obj.body_params
+    body_params = {
+      "in" => "body",
+      "name" => "body",
+      "required" => true,
+      "schema" => { "$ref" => service_obj.create_schema}
+    }
+
+    temp_array << body_params
   end
 
   def generate_service_internal service_obj

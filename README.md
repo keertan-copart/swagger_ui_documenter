@@ -53,7 +53,7 @@ Example format: [OLD Version]
 
 </div>
 
-<h2 id="newversion">Example format: [New Version]</h2>
+<h2 id="newversion">Example format: [New Version] - Note: Undergoing Changes</h2>
 
 This file would be an extract from inside a ycs-api project.
 
@@ -64,20 +64,20 @@ path : ycs-api/app/handlers/FooHandler.rb
     
     # group_description: used to do this and that task use -d in description to flag as deprecated
 
-    # TODO: This endpoint is ugly. Fix it. - this won't be in description
+    # TODO:  - this won't be in description
 
-    # name: 
-    # summary:  sample_name
+    # name: has to be a unique name for service
+    # summary:  sample_name use -d anywhere in this line to make it deprecated
     # description: sample_description
     #
-    #<multiple line description supported> 
+    # multiple line description
     #
-  < single line/ multiple line gap - optional >
-  post '/lots/accept' do
-    return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
-    params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
-    { status: 'success' }.to_json
-  end
+  
+    post '/lots/accept' do
+      return_errors(lots: I18n.t('common.errors.required')) unless params[:lots] && params[:lots].is_a?(Array) 
+      params[:lots].each { |number| Ycs::Transporter::UpdateLot.accepted(number) } ## double hashes for internal comments
+      { status: 'success' }.to_json
+    end
   
 
 ```
@@ -88,84 +88,48 @@ path : ycs-api/spec/foo/sample_name/
 
 In this folder, we need to have 
 
- - <a href="#payload">payload.rb</a> (for get/delete, only query parameters are included in payload)
- - <a href="#response">response.rb </a>
+  (for get/delete, only query parameters are included in payload)
+ - <a href="#response">response.json</a>
 
 
  error.json
  response.json
- request.json
+ - <a href="#request">request.json</a>
  header.json
  query.json
 
 
-<h4 id="payload">Inside payload.rb:</h4>
+<h4 id="request">Inside request.json:</h4>
 
 The paramters passed through path, like ```lots/get_lot_status/:lot_id```
 Here, {lot_id} is passed through path, it is defaultly considered as a string.
 Note : Path parameters need NOT be included in the payload
 
-if you have something like ```lots/get_lots_by_filter/filters```
-and you have to pass an array of all filters applied, then it is considered as query parameter.
+query parameters have to be included in the query. 
+All body parameters should also be included in the request
 
-query parameters have to be included in the payload. 
-All body parameters should also be included in the payload
+request.json
 
 ```
-class Payload
-  @@pay_load = [  # array of hashes
-      
-      {
-        "name" => "simple_example",
-        "in" => "body",
-        "description" => "simple description",
-        "required" => true,
-        "type" => "string"
+{
+    
+   "simple_example" : { 
+
+        "description" : "simple description",
+        "required" : true,
+        "type" : "string"
         },
 
-      { 
-        "name" => "status",
-        "in" => "query", # if this data should be sent in the query; note: the path variables are not needed to be included in payload.
-        "description" => "Status values that need to be considered for filter",
-        "required" => true,  # assign false if not a required parameter
-        "type" => "array", # if type is array, then items have to be defined, or else not needed.
-        "items" => {
-            "type" => "string",
-            "enum" => ["available","pending","sold"],  # if enum, else not required; Note: notice its an array of possible values
-            "default" => "available" # if an enum, then default is needed.
-          }
-        },
+    "another_example" : {
 
-      {
-        "name" => "body",
-        "in" => "body",        
-        "description" => "Pet object that needs to be added to the store",
-        "required" => true,
+        "description" : "lot object that needs to be added to the store",
+        "required" : true,
             
-        # if the data to be sent is of a particular format, defined already then add a reference to it.
-        # or if you want to define a custom format, define it in ref_schema. see 'Inside response.rb' for more details on format
-
-        "schema" =>{
-            "$ref":"#/definitions/Category"  # Assuming this Category is already defined in your project
-          }
+        "schema" : {
+            "$ref":"#/definitions/Lot_schema" 
+            }
         }
-    ]
-
-  @@ref_schema = {
-      # for details on ref_schema, go down and see 'Inside response.rb'
-      }
-  
-
-  def self.pay_load
-    @@pay_load
-  end
-
-  def self.ref_schema
-    @@ref_schema
-  end
-
-end
-
+}
 
 ```
 
@@ -174,6 +138,7 @@ end
 <h4 id="response">Inside response.rb:</h4>
 
 There should be a model of response.  
+
 ```
   class Response
     @@response_codes = {
@@ -258,6 +223,27 @@ There should be a model of response.
 
 ```
 
+
+
+
+
+errors.json
+
+Example:
+
+```
+
+{
+    "200": {
+          "description": "success! a lot number to be returned",        
+         },
+
+    "405": {
+          "description": "invalid input",
+          },
+}
+
+```
 
 
 

@@ -46,6 +46,7 @@ namespace 'doc' do
         s.extraction line
         s.add_tag(handler_tag, group_description)       
         s.attach_body_params  
+        s.attach_query_params
         s.attach_response_codes 
         services_found << s
         service_description = ""

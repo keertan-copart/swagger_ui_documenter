@@ -12,7 +12,7 @@ class Service
   @@schema_references = {}
 
   attr_reader  :comment, :service_description, :paramset, :path, :name, :type, :param_flag, :response_codes
-  attr_accessor :service_name, :deprecated, :body_params, :id, :tag, :summary
+  attr_accessor :service_name, :deprecated, :body_params, :query_params, :id, :tag, :summary
 
   def initialize(service_name, summary, tag, service_description, deprecated)
     @service_name = service_name
@@ -27,7 +27,7 @@ class Service
     @service_description = service_description
     @testing_lotno = 12345
     @body_params = {}
-    @response_codes = [ {"200"=>{"description"=>"success!"}} ]
+    @response_codes =  {"default"=>{"description"=>"unknown error"}} 
     @@host = "0.0.0.0:9292"
     @@baseurl = "0.0.0.0:9292/transporter/"
     id = "0"
@@ -84,21 +84,75 @@ class Service
 	end
 
   def attach_query_params
-    # comment
+    #get body params from the spec files given
+    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/query.json"
+    #spec_file = File.read(spec_file_path)
+    begin
+      File.open(spec_file_path, 'r') do |f|
+      spec_file = f.read
+      @query_params = JSON.parse(spec_file)
+      end
+    rescue
+      @query_params = ""
+    end
   end
 
   def attach_body_params
     #get body params from the spec files given
     spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/request.json"
-    @body_params = JSON.parse(spec_file_path)
-    Service.add_to_global_schema Payload.ref_schema  # tried using self.add_to_gloabl_schema, but didnt seem to work
+    #spec_file = File.read(spec_file_path)
+    File.open(spec_file_path, 'r') do |f|
+      spec_file = f.read
+      @body_params = JSON.parse(spec_file)
+    end
+    #Service.add_to_global_schema Payload.ref_schema  # tried using self.add_to_gloabl_schema, but didnt seem to work
   end
 
   def attach_response_codes
-    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/response.rb"
-    require spec_file_path
-    @response_codes = Response.response_codes
-    Service.add_to_global_schema Response.ref_schema
+    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/response.json"
+    #spec_file = File.read(spec_file_path)
+    File.open(spec_file_path, 'r') do |f|
+      spec_file = f.read
+      response = JSON.parse(spec_file)
+    end
+ 
+    #Service.add_to_global_schema Response.ref_schema
+
+    #check errors.json
+    spec_file_path = "./../spec/" + @tag + "/"+ @service_name + "/errors.json"
+    #spec_file = File.read(spec_file_path)
+    File.open(spec_file_path, 'r') do |f|
+      spec_file = f.read
+      error_codes = JSON.parse(spec_file)
+    end
+
+    @response_codes = @response_codes.merge(error_codes)
+
+
+
+  end
+
+
+  def strip_required
+    required_array = []
+    #puts "body params is like this: ", @body_params
+    @body_params.each do |key, value|
+      if value["required"]
+        required_array << key
+      end 
+    end
+    required_array
+  end
+
+  def create_schema
+    schema = {
+      "type" => "object",
+      "required" => strip_required,
+      "properties" => @body_params
+    }
+    #self.add_to_global_schema({ @service_name => schema })
+    @@schema_global = @@schema_global.merge({ @service_name => schema })
+    "#/definitions/" + @service_name
   end
 
   def self.add_to_global_schema schema
