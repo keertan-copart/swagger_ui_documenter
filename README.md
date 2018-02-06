@@ -91,7 +91,7 @@ In this folder, we need to have
   (for get/delete, only query parameters are included in payload)
 
 
-- <a href="#error">error.json</a>
+- <a href="#errors">errors.json</a>
 - <a href="#response">response.json</a>
 - <a href="#request">request.json</a>
 - <a href="#query">query.json</a>
@@ -133,7 +133,7 @@ request.json
 
 
 
-<h4 id="response">Inside response.rb:</h4>
+<h4 id="response">Inside response.json:</h4>
 
 There should be a model of response.  
 
@@ -175,8 +175,7 @@ Example errors.json:
 
 
 <h4 id="query">query.json</h4>
-
-Example errors.json:
+Example query.json:
 
 ```
 
