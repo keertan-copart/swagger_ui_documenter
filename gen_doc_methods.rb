@@ -140,15 +140,36 @@ module GenDocMethods
     temp_array << body_params
   end
 
+  def generate_response service_obj
+    if service_obj.response.empty?
+      service_obj.response_codes 
+    else
+      # add the response to the 200 status content
+      service_obj.response.each do |key, value|
+      refname = service_obj.service_name + "_response"
+      temp_hash = {
+                  refname => {                          
+                          "type" => "object",                          
+                          "properties" => { key => value }
+                        }
+                  }
+       Service.add_to_global_schema temp_hash
+       # now, add $ref => "#/definitions/refname" under 200 - schema
+       service_obj.response_codes["200"]["schema"] = { "$ref" => "#/definitions/"+refname } 
+      end
+    end
+    service_obj.response_codes
+  end
+
   def generate_service_internal service_obj
     {
       "tags" => [service_obj.tag],
       "summary" => service_obj.summary,
       "description" => service_obj.service_description,
-      "consumes" => %w[ application/json application/xml],
-      "produces" => %w[ application/json application/xml],
+      "consumes" => %w[ application/json application],
+      "produces" => %w[ application/json application],
       "parameters" => generate_parameter_internal(service_obj),
-      "responses" => service_obj.response_codes,
+      "responses" => generate_response(service_obj),
       "deprecated" => service_obj.deprecated,
     }
   end
@@ -195,7 +216,6 @@ module GenDocMethods
   end
 
   def design_json(title, host, baseurl, all_tags, services_array)
-    title = "project name"
     # sort services_array, to get tag_and_path_based_service_order
     tag_and_path_based_service_order = {}    
     all_tags.each do |tag|

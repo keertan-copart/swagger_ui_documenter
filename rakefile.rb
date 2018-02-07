@@ -13,10 +13,6 @@ task :test do
 end
 
 namespace 'doc' do
-  def fetch_spec(service_obj, path_to_spec_files)  # gets all spec information and adds to the service object
-    # Comment
-  end 
-
   def fetch_services handler
     services_found = []
     service_description_flag = false
@@ -59,7 +55,7 @@ namespace 'doc' do
   end
 
   def extract_title
-
+    File.expand_path('../.') .split("/").last
   end
 
   desc 'generates documentation'

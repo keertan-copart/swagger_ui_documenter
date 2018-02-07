@@ -11,8 +11,9 @@ class Service
   @@schema_global = {}
   @@schema_references = {}
 
+
   attr_reader  :comment, :service_description, :paramset, :path, :name, :type, :param_flag, :response_codes
-  attr_accessor :service_name, :deprecated, :body_params, :query_params, :id, :tag, :summary
+  attr_accessor :service_name, :deprecated, :body_params, :query_params, :id, :tag, :summary, :response
 
   def initialize(service_name, summary, tag, service_description, deprecated)
     @service_name = service_name
@@ -24,6 +25,7 @@ class Service
     @deprecated = deprecated
     @param_flag = false
     @paramset = %w[]
+    @response = {}
     @service_description = service_description
     @testing_lotno = 12345
     @body_params = {}
@@ -110,33 +112,22 @@ class Service
 
   def attach_response_codes
     spec_file_path = "./../spec/doc/" + @tag + "/"+ @service_name + "/response.json"
-    #spec_file = File.read(spec_file_path)
     File.open(spec_file_path, 'r') do |f|
       spec_file = f.read
-      response = JSON.parse(spec_file)
+      @response = JSON.parse(spec_file)
     end
- 
-    #Service.add_to_global_schema Response.ref_schema
 
     #check errors.json
     spec_file_path = "./../spec/doc/" + @tag + "/"+ @service_name + "/errors.json"
-    #spec_file = File.read(spec_file_path)
     File.open(spec_file_path, 'r') do |f|
       spec_file = f.read
       error_codes = JSON.parse(spec_file)
       @response_codes = @response_codes.merge(error_codes)
     end
-
-
-
-
-
   end
-
 
   def strip_required
     required_array = []
-    #puts "body params is like this: ", @body_params
     @body_params.each do |key, value|
       if value["required"]
         required_array << key
@@ -146,12 +137,15 @@ class Service
   end
 
   def create_schema
+    req_array = strip_required
+    @body_params.each do |k, v|
+      v.delete("required") if v["required"]      
+    end
     schema = {
-      "type" => "object",
-      "required" => strip_required,
-      "properties" => @body_params
+      "type" => "object",        
     }
-    #self.add_to_global_schema({ @service_name => schema })
+    schema["required"] = req_array if !req_array.nil?
+    schema["properties"] =  @body_params
     @@schema_global = @@schema_global.merge({ @service_name => schema })
     "#/definitions/" + @service_name
   end

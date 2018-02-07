@@ -57,7 +57,7 @@ Example format: [OLD Version]
 
 This file would be an extract from inside a ycs-api project.
 
-path : ycs-api/app/handlers/FooHandler.rb 
+path : ycs-api/app/handlers/FooHandler.rb
 
 ```
   class Ycs::FooHandler < Boo
@@ -101,10 +101,7 @@ In this folder, we need to have
 
 The paramters passed through path, like ```lots/get_lot_status/:lot_id```
 Here, {lot_id} is passed through path, it is defaultly considered as a string.
-Note : Path parameters need NOT be included in the payload
-
-query parameters have to be included in the query. 
-All body parameters should also be included in the request
+Note : Path parameters need NOT be included in query.json
 
 request.json
 
@@ -135,7 +132,7 @@ request.json
 
 <h4 id="response">Inside response.json:</h4>
 
-There should be a model of response.  
+response.json  
 
 ```
     { 
@@ -146,16 +143,13 @@ There should be a model of response.
 
       }
 
-
 ```
-
-
 
 
 
 <h4 id="errors">errors.json</h4>
 
-Example errors.json:
+errors.json:
 
 ```
 
@@ -175,7 +169,8 @@ Example errors.json:
 
 
 <h4 id="query">query.json</h4>
-Example query.json:
+
+query.json:
 
 ```
 
